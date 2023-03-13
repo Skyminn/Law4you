@@ -85,7 +85,9 @@ app.get('/search/:id', async(req, res) => {
                 jomun: 'asc'
             },
         })
-        res.send(result)
+        
+        var response = result.map(item=>JSON.parse(item.jomun))
+        res.send(response)
 
     }catch(err){
         console.log(err)
