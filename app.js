@@ -91,15 +91,18 @@ app.get('/search/:id', async(req, res) => {
                     jomun: 'asc'
                 },
             })
-            
-            var response = result.map(item=>JSON.parse(item.jomun))
-            res.send(response)
+            if(result.length == 0) {
+                res.send({ message: 'No result.' })
+            }else {
+                var response = result.map(item=>JSON.parse(item.jomun))
+                res.send(response)
+            }
     
         }catch(err){
             console.log(err)
             res.status(500).send({error:'Server Error.'});
         }
     }else {
-        res.send("No result")
+        res.send({ message: 'No result.' })
     }
 })
