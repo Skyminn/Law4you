@@ -66,31 +66,40 @@ async function savetodb(item, category) {
 
 app.get('/search/:id', async(req, res) => {
     const category = req.params.id
-    const keyword = req.query.q;
+    var keyword = req.query.q;
 
-    try{
-        const result = await prisma.law.findMany({
-            select: {
-                jomun: true
-            },
-            where: {
-                jomun: {
-                    contains: keyword,
-                }, 
-                category: {
-                    equals: category
-                }
-            },
-            orderBy: {
-                jomun: 'asc'
-            },
-        })
-        
-        var response = result.map(item=>JSON.parse(item.jomun))
-        res.send(response)
-
-    }catch(err){
-        console.log(err)
-        res.status(500).send({error:'Server Error.'});
+    if(!(keyword == '조문' || keyword == '_attributes' || keyword == '조문키'||
+        keyword == '조문번호' || keyword == '조문여부' || keyword == '조문제목' || keyword == '조문시행일자'
+        || keyword == '조문이동이전' || keyword == '조문이동이후' || keyword == '조문이동여부' || keyword == '조문내용' 
+        || keyword == '_text' || keyword == '_cdata' || keyword == '항' || keyword == '항번호' || keyword == '항내용'
+        || keyword == '조' || keyword == '조번호' || keyword == '조내용' || keyword == '목' || keyword == '목번호'
+        || keyword == '목내용' || keyword == '조문참고자료')){
+        try{
+            const result = await prisma.law.findMany({
+                select: {
+                    jomun: true
+                },
+                where: {
+                    jomun: {
+                        contains: keyword,
+                    }, 
+                    category: {
+                        equals: category
+                    }
+                },
+                orderBy: {
+                    jomun: 'asc'
+                },
+            })
+            
+            var response = result.map(item=>JSON.parse(item.jomun))
+            res.send(response)
+    
+        }catch(err){
+            console.log(err)
+            res.status(500).send({error:'Server Error.'});
+        }
+    }else {
+        res.send("No result")
     }
 })
