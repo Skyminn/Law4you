@@ -52,11 +52,42 @@ app.get('/db/:id', getLaw, async(req, res) => {
 })
 
 async function savetodb(item, category) {
+    var jomunTitle = item.조문제목
+    var jomunStartDay = item.조문시행일자._text
+    var jomunContent = item.조문내용._cdata
+    var jomunReference = item.조문참고자료
+    var hang
+    const jomunKey = item._attributes.조문키
+
+    if(item.조문제목 == undefined){
+        jomunTitle = ''
+    } else {
+        jomunTitle = jomunTitle._cdata
+    }
+
+    if(item.조문참고자료 == undefined){
+        jomunReference = ''
+    } else {
+        jomunReference = jomunReference._cdata
+    }
+    if(item.항 == undefined){
+        hang = []
+    } else {
+        hang = item.항
+    }
+
+    console.log(hang)
+
     try{
-        await prisma.law.create({
+        await prisma.lawJson.create({
         data:{
             category: category,
-            jomun: JSON.stringify(item)
+            jomunKey: jomunKey,
+            jomunTitle: jomunTitle,
+            jomunStartDay: jomunStartDay,
+            jomunContent: jomunContent,
+            jomunReference: jomunReference,
+            hang: hang
         },
         })
     } catch (error) {
@@ -68,41 +99,37 @@ app.get('/search/:id', async(req, res) => {
     const category = req.params.id
     var keyword = req.query.q;
 
-    if(!(keyword == '조문' || keyword == '_attributes' || keyword == '조문키'||
-        keyword == '조문번호' || keyword == '조문여부' || keyword == '조문제목' || keyword == '조문시행일자'
-        || keyword == '조문이동이전' || keyword == '조문이동이후' || keyword == '조문이동여부' || keyword == '조문내용' 
-        || keyword == '_text' || keyword == '_cdata' || keyword == '항' || keyword == '항번호' || keyword == '항내용'
-        || keyword == '조' || keyword == '조번호' || keyword == '조내용' || keyword == '목' || keyword == '목번호'
-        || keyword == '목내용' || keyword == '조문참고자료')){
         try{
-            const result = await prisma.law.findMany({
+            const result = await prisma.lawJson.findMany({
                 select: {
-                    jomun: true
+                    jomunKey: true,
+                    jomunTitle: true,
+                    jomunStartDay: true,
+                    jomunContent: true,
+                    jomunReference: true,
+                    hang: true
                 },
                 where: {
-                    jomun: {
-                        contains: keyword,
-                    }, 
-                    category: {
-                        equals: category
-                    }
+                    OR: [
+                        {jomunTitle: {string_contains: keyword}},
+                        {jomunContent: {string_contains: keyword}}
+                    ],
+                    AND: [
+                        {category: {equals: category}}
+                    ]
                 },
                 orderBy: {
-                    jomun: 'asc'
+                    jomunKey: 'asc'
                 },
             })
             if(result.length == 0) {
                 res.send({ message: 'No result.' })
             }else {
-                var response = result.map(item=>JSON.parse(item.jomun))
-                res.send(response)
+                res.send(result)
             }
     
         }catch(err){
             console.log(err)
             res.status(500).send({error:'Server Error.'});
         }
-    }else {
-        res.send({ message: 'No result.' })
-    }
 })
